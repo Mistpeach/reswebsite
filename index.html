@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源小站 - 卡片展示</title>
+
+
+
+    <style>
+
+        /* ==================== 本地字体声明 ==================== */
+        @font-face {
+            font-family: 'MySiteFont';
+            src: url('./res/fonts/myfont.ttf') format('truetype');
+        }
+
+
+
+        /* ==================== CSS 变量 & 全局样式 ==================== */
+        :root {
+            --font-primary: 'MySiteFont', sans-serif;
+            --font-display: 'MySiteFont', sans-serif;
+
+            --color-bg-overlay: rgba(0, 0, 0, 0.35);
+            --color-card-bg: rgba(255, 255, 255, 0.88);
+            --color-card-bg-hover: rgba(255, 255, 255, 0.96);
+            --color-card-shadow: rgba(0, 0, 0, 0.08);
+            --color-card-shadow-hover: rgba(0, 0, 0, 0.18);
+            --color-text-primary: #1a1a2e;
+            --color-text-secondary: #4a4a5e;
+            --color-text-muted: #6b6b80;
+            --color-accent: #ff6b6b;
+            --color-accent-hover: #e55a5a;
+            --color-accent-2: #ffa94d;
+            --color-border: rgba(0, 0, 0, 0.06);
+            --color-modal-overlay: rgba(0, 0, 0, 0.65);
+
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 22px;
+            --radius-xl: 28px;
+
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.10);
+            --shadow-lg: 0 14px 40px rgba(0, 0, 0, 0.14);
+            --shadow-xl: 0 24px 56px rgba(0, 0, 0, 0.20);
+
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+            --max-width: 1200px;
+            --header-padding: 40px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            min-height: 100vh;
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+
+            /* ==================== 背景图片设置 ==================== */
+            /* ▼ 在这里修改背景图片URL ▼ */
+            background-image:
+                linear-gradient(135deg,
+                    rgba(30, 30, 60, 0.55) 0%,
+                    rgba(20, 20, 45, 0.45) 30%,
+                    rgba(40, 30, 55, 0.50) 60%,
+                    rgba(25, 25, 50, 0.55) 100%),
+                url('./res/pic/bg.jpg');
+
+
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            /* 移动端禁用fixed以避免性能问题 */
+            position: relative;
+        }
+
+        /* 背景之上的微纹理叠加层 */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(255, 255, 255, 0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 60%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(200, 180, 255, 0.05) 0%, transparent 50%);
+            opacity: 0.7;
+        }
+
+        /* 主容器 */
+        .main-container {
+            position: relative;
+            z-index: 1;
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+        }
+
+        /* ==================== 大标题 ==================== */
+        .main-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.2rem, 5vw, 3.6rem);
+            font-weight: 800;
+            color: #ffffff;
+            text-align: center;
+            letter-spacing: 0.03em;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.25);
+            margin-top: 18px;
+            line-height: 1.25;
+            animation: fadeInDown 0.7s ease-out;
+        }
+
+        .main-title .highlight {
+            background: linear-gradient(135deg, #ff9a56, #ff6b6b, #ee5a6f);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 3px 8px rgba(255, 107, 107, 0.4));
+            display: inline;
+        }
+
+        /* ==================== 小标题 ==================== */
+        .sub-title {
+            font-family: var(--font-primary);
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.85);
+            text-align: center;
+            letter-spacing: 0.05em;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            margin-top: -8px;
+            animation: fadeInDown 0.7s ease-out 0.1s both;
+        }
+
+        /* ==================== 赞赏按钮 ==================== */
+        .donate-btn-wrapper {
+            animation: fadeInDown 0.7s ease-out 0.2s both;
+        }
+
+        .donate-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            font-family: var(--font-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #ff9a56, #ff6b6b);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 8px 28px rgba(255, 107, 107, 0.4), 0 4px 10px rgba(0, 0, 0, 0.15);
+            transition: all var(--transition-bounce);
+            letter-spacing: 0.03em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .donate-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+            border-radius: 50px;
+            transition: opacity var(--transition-fast);
+            opacity: 0;
+        }
+
+        .donate-btn:hover {
+            transform: translateY(-3px) scale(1.04);
+            box-shadow: 0 14px 36px rgba(255, 107, 107, 0.5), 0 6px 14px rgba(0, 0, 0, 0.2);
+            color: #fff;
+        }
+        .donate-btn:hover::after {
+            opacity: 1;
+        }
+        .donate-btn:active {
+            transform: translateY(-1px) scale(1.01);
+            box-shadow: 0 6px 18px rgba(255, 107, 107, 0.45), 0 3px 8px rgba(0, 0, 0, 0.18);
+            transition: all 0.1s ease;
+        }
+
+        .donate-btn .icon-heart {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            animation: heartbeat 1.2s ease-in-out infinite;
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+        }
+
+        @keyframes heartbeat {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            12% {
+                transform: scale(1.25);
+            }
+            24% {
+                transform: scale(1);
+            }
+            36% {
+                transform: scale(1.18);
+            }
+            48% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ==================== 站长的话 - 简介卡片 ==================== */
+        .owner-card {
+            width: 100%;
+            max-width: 700px;
+            background: var(--color-card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            transition: all var(--transition-smooth);
+            animation: fadeInUp 0.7s ease-out 0.3s both;
+        }
+
+        .owner-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+            background: var(--color-card-bg-hover);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .owner-card-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .owner-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .owner-card-title {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            letter-spacing: 0.02em;
+        }
+
+        .owner-card-bio {
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+            line-height: 1.7;
+            padding: 0 4px;
+        }
+
+        .owner-card-bio .emoji-accent {
+            display: inline-block;
+            margin: 0 2px;
+            font-size: 1.1em;
+        }
+
+        /* 社交平台图标区域 */
+        .social-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 6px;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: all var(--transition-bounce);
+            position: relative;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .social-link:hover {
+            transform: translateY(-4px) scale(1.1);
+            box-shadow: var(--shadow-md);
+        }
+        .social-link:active {
+            transform: translateY(-1px) scale(1.03);
+            transition: all 0.1s ease;
+        }
+
+        /* 各平台颜色 */
+        .social-bilibili {
+            background: #fb7299;
+        }
+        .social-bilibili:hover {
+            background: #ff85a8;
+            box-shadow: 0 6px 18px rgba(251, 114, 153, 0.45);
+        }
+        .social-github {
+            background: #24292e;
+        }
+        .social-github:hover {
+            background: #333840;
+            box-shadow: 0 6px 18px rgba(36, 41, 46, 0.45);
+        }
+        .social-netease {
+            background: #c62f2f;
+        }
+        .social-netease:hover {
+            background: #da3a3a;
+            box-shadow: 0 6px 18px rgba(198, 47, 47, 0.45);
+        }
+        .social-tiktok {
+            background: #111111;
+        }
+        .social-tiktok:hover {
+            background: #222222;
+            box-shadow: 0 6px 18px rgba(17, 17, 17, 0.45);
+        }
+        .social-weibo {
+            background: #e6162d;
+        }
+        .social-weibo:hover {
+            background: #f0283d;
+            box-shadow: 0 6px 18px rgba(230, 22, 45, 0.45);
+        }
+        .social-youtube {
+            background: #ff0000;
+        }
+        .social-youtube:hover {
+            background: #ff2222;
+            box-shadow: 0 6px 18px rgba(255, 0, 0, 0.45);
+        }
+
+        .social-link svg {
+            width: 20px;
+            height: 20px;
+            fill: #ffffff;
+            pointer-events: none;
+        }
+
+        /* 社交图标tooltip */
+        .social-link::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            background: rgba(30, 30, 45, 0.92);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: all var(--transition-fast);
+            font-family: var(--font-primary);
+            letter-spacing: 0.03em;
+        }
+        .social-link:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ==================== 详细内容卡片网格 ==================== */
+        .cards-section-title {
+            width: 100%;
+            text-align: center;
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.04em;
+            margin-top: 8px;
+            animation: fadeInUp 0.7s ease-out 0.35s both;
+        }
+
+        .cards-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 22px;
+            animation: fadeInUp 0.7s ease-out 0.4s both;
+        }
+
+        /* ==================== 单个内容卡片 ==================== */
+        .content-card {
+            background: var(--color-card-bg);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border);
+            transition: all var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            animation: fadeInUp 0.55s ease-out both;
+        }
+
+        .content-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(0, 0, 0, 0.12);
+            background: var(--color-card-bg-hover);
+        }
+        .content-card:active {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            transition: all 0.1s ease;
+        }
+
+        .card-image-wrapper {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            overflow: hidden;
+            position: relative;
+            background: #e8e8ee;
+        }
+
+        .card-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform var(--transition-smooth);
+        }
+
+        .content-card:hover .card-image-wrapper img {
+            transform: scale(1.06);
+        }
+
+        /* 卡片图片上的渐变遮罩 */
+        .card-image-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.25), transparent);
+            pointer-events: none;
+        }
+
+        .card-body {
+            padding: 16px 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .card-title {
+            font-family: var(--font-primary);
+            font-size: 1.08rem;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            letter-spacing: 0.02em;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-desc {
+            font-size: 0.88rem;
+            color: var(--color-text-muted);
+            line-height: 1.55;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .card-click-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.78rem;
+            color: var(--color-accent);
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: all var(--transition-fast);
+            letter-spacing: 0.03em;
+            margin-top: 2px;
+        }
+        .content-card:hover .card-click-hint {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card-click-hint svg {
+            width: 14px;
+            height: 14px;
+            fill: var(--color-accent);
+        }
+
+        /* ==================== 模态框 ==================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: var(--color-modal-overlay);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-smooth);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-dialog {
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            transform: translateY(30px) scale(0.94);
+            transition: all var(--transition-bounce);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.active .modal-dialog {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            z-index: 10;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #555;
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-sm);
+            line-height: 1;
+        }
+        .modal-close-btn:hover {
+            background: #fff;
+            color: #111;
+            box-shadow: var(--shadow-md);
+            transform: scale(1.08);
+        }
+        .modal-close-btn:active {
+            transform: scale(0.94);
+            transition: all 0.1s ease;
+        }
+
+        .modal-image-wrapper {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            overflow: hidden;
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            background: #e8e8ee;
+            flex-shrink: 0;
+        }
+        .modal-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .modal-body {
+            padding: 24px 26px 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .modal-title {
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            letter-spacing: 0.02em;
+            line-height: 1.35;
+        }
+
+        .modal-desc {
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+            line-height: 1.7;
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .modal-download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            font-family: var(--font-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all var(--transition-bounce);
+            letter-spacing: 0.03em;
+            border: none;
+            flex-shrink: 0;
+        }
+
+        .btn-primary-download {
+            background: linear-gradient(135deg, #4a90d9, #357abd);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(74, 144, 217, 0.35);
+        }
+        .btn-primary-download:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(74, 144, 217, 0.5);
+            color: #fff;
+        }
+        .btn-primary-download:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(74, 144, 217, 0.4);
+            transition: all 0.1s ease;
+        }
+
+        .btn-backup-download {
+            background: #fff;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-backup-download:hover {
+            border-color: #cbd5e0;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            color: #2d3748;
+        }
+        .btn-backup-download:active {
+            transform: translateY(-1px);
+            transition: all 0.1s ease;
+        }
+
+        .modal-download-btn svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+        .btn-primary-download svg {
+            fill: #fff;
+        }
+        .btn-backup-download svg {
+            fill: #4a5568;
+        }
+
+        /* 模态框滚动条美化 */
+        .modal-dialog::-webkit-scrollbar {
+            width: 5px;
+        }
+        .modal-dialog::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+        }
+        .modal-dialog::-webkit-scrollbar-thumb {
+            background: #d0d0d8;
+            border-radius: 10px;
+        }
+        .modal-dialog::-webkit-scrollbar-thumb:hover {
+            background: #b0b0b8;
+        }
+
+        /* 防止模态框打开时背景滚动 */
+        body.modal-open {
+            overflow: hidden;
+            padding-right: var(--scrollbar-width, 0px);
+        }
+
+        /* ==================== 页脚 ==================== */
+        .footer-text {
+            text-align: center;
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 0.04em;
+            margin-top: 10px;
+            animation: fadeIn 0.8s ease-out 0.5s both;
+        }
+
+        /* ==================== 响应式设计 ==================== */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 14px 14px 40px;
+                gap: 22px;
+            }
+
+            .main-title {
+                font-size: clamp(1.6rem, 7vw, 2.4rem);
+                margin-top: 10px;
+            }
+            .sub-title {
+                font-size: 0.9rem;
+                margin-top: -4px;
+            }
+
+            .donate-btn {
+                padding: 12px 26px;
+                font-size: 1rem;
+                gap: 8px;
+            }
+
+            .owner-card {
+                padding: 20px 18px;
+                border-radius: var(--radius-md);
+                gap: 12px;
+            }
+            .owner-avatar {
+                width: 42px;
+                height: 42px;
+                font-size: 1.3rem;
+            }
+            .owner-card-title {
+                font-size: 1.1rem;
+            }
+            .owner-card-bio {
+                font-size: 0.88rem;
+            }
+            .social-link {
+                width: 36px;
+                height: 36px;
+            }
+            .social-link svg {
+                width: 17px;
+                height: 17px;
+            }
+            .social-link::after {
+                display: none;
+                /* 移动端隐藏tooltip */;
+            }
+
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+                gap: 14px;
+            }
+
+            .card-body {
+                padding: 12px 14px 16px;
+            }
+            .card-title {
+                font-size: 1rem;
+            }
+            .card-desc {
+                font-size: 0.82rem;
+            }
+
+            .modal-dialog {
+                max-width: 95vw;
+                border-radius: var(--radius-lg);
+                max-height: 85vh;
+            }
+            .modal-image-wrapper {
+                border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            }
+            .modal-body {
+                padding: 18px 16px 22px;
+                gap: 10px;
+            }
+            .modal-title {
+                font-size: 1.15rem;
+            }
+            .modal-desc {
+                font-size: 0.88rem;
+            }
+            .modal-download-btn {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+                gap: 6px;
+            }
+            .modal-close-btn {
+                top: 10px;
+                right: 10px;
+                width: 32px;
+                height: 32px;
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 10px 8px 30px;
+                gap: 16px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .owner-card {
+                padding: 16px 14px;
+                border-radius: var(--radius-sm);
+            }
+            .social-links {
+                gap: 7px;
+            }
+            .social-link {
+                width: 32px;
+                height: 32px;
+            }
+            .social-link svg {
+                width: 15px;
+                height: 15px;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .modal-download-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .cards-section-title {
+                font-size: 1.15rem;
+            }
+        }
+
+        /* 平板竖屏 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 18px;
+            }
+            .main-container {
+                padding: 18px 20px 50px;
+            }
+        }
+
+        /* 大屏幕优化 */
+        @media (min-width: 1400px) {
+            .cards-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 26px;
+            }
+            .main-container {
+                max-width: 1400px;
+            }
+        }
+
+        /* 在移动端禁用fixed背景（提升性能） */
+        @media (max-width: 768px) {
+            body {
+                background-attachment: scroll;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 主容器 ==================== -->
+    <div class="main-container">
+
+        <!-- 大标题 -->
+        <h1 class="main-title">
+            欢迎来到 <span class="highlight">YumFish资源小站</span>
+        </h1>
+
+        <!-- 小标题 -->
+        <p class="sub-title">MC建筑生电 · 分享资源 · 持续更新</p>
+
+        <!-- 赞赏按钮（点击跳转网页） -->
+        <!-- ▼ 在这里修改赞赏链接 ▼ -->
+        <div class="donate-btn-wrapper">
+            <a href="./donate.html" target="_blank" rel="noopener noreferrer" class="donate-btn" title="支持站长">
+                <svg class="icon-heart" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                赞赏支持
+            </a>
+        </div>
+        <!-- ▲ 可替换赞赏链接 ▲ -->
+
+        <!-- 站长的话（简介卡片） -->
+        <div class="owner-card">
+            <div class="owner-card-header">
+                <div class="owner-avatar">站</div>
+                <span class="owner-card-title">站长的话</span>
+            </div>
+            <p class="owner-card-bio">
+                嗨，欢迎来到我的小站！<span class="emoji-accent">🌟</span>
+                这里分享我整理的各种资源，希望能帮到你。
+                如果觉得有用，欢迎关注我的社交账号，也别忘了点个赞赏支持一下哦～</p>
+                注意：二创，传播，必须带上本站链接以及原视频链接！
+                <span class="emoji-accent">💖</span>
+            </p>
+            <!-- 社交平台图标 -->
+            <div class="social-links">
+                <!-- ▼ 在这里修改社交平台链接 ▼ -->
+                <!-- 哔哩哔哩 -->
+                <a href="https://space.bilibili.com/355051027" target="_blank" rel="noopener noreferrer" class="social-link social-bilibili" data-tooltip="哔哩哔哩" title="哔哩哔哩">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <!-- 小电视天线 -->
+                        <path d="M5 3l3.5 4h7L19 3h-2l-3.5 4L10 3H5z" fill="white"/>
+                        <!-- 电视机身 -->
+                        <rect x="5" y="7" width="14" height="12" rx="1.5" fill="white"/>
+                        <!-- 屏幕高光 -->
+                        <rect x="6.5" y="8.5" width="11" height="8" rx="0.5" fill="#fb7299"/>
+                        <!-- 支架 -->
+                        <path d="M10 19h4v2h-4z" fill="white"/>
+                      </svg>
+                      
+                </a>
+                <!-- GitHub1 -->
+                <a href="https://github.com/1732410167" target="_blank" rel="noopener noreferrer" class="social-link social-github" data-tooltip="GitHub1" title="GitHub1">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>
+                <!-- GitHub2 -->
+                <a href="https://github.com/mistpeach" target="_blank" rel="noopener noreferrer" class="social-link social-github" data-tooltip="GitHub2" title="GitHub2">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                </a>    
+                <!-- 网易云音乐 -->
+                <a href="https://y.music.163.com/m/user?id=610778786" target="_blank" rel="noopener noreferrer" class="social-link social-netease" data-tooltip="网易云音乐" title="网易云音乐">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-.5 15.5c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm4.5-1.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
+                    </svg>
+                </a>
+                <!-- 抖音 -->
+                <a href="https://www.douyin.com/" target="_blank" rel="noopener noreferrer" class="social-link social-tiktok" data-tooltip="抖音" title="抖音">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.89a2.89 2.89 0 01-2.88 2.57 2.9 2.9 0 01-2.89-2.9 2.89 2.89 0 012.89-2.89c.3 0 .59.05.86.13V9.3c-.28-.04-.57-.06-.86-.06a5.9 5.9 0 00-5.9 5.9 5.9 5.9 0 005.9 5.9 5.9 5.9 0 005.9-5.9V8.51a7.8 7.8 0 004.49 1.44V6.69z"/>
+                    </svg>
+                </a>
+                
+                <!-- ▲ 可替换/增删社交链接 ▲ -->
+            </div>
+        </div>
+
+        <!-- 详细内容卡片区域标题 -->
+        <p class="cards-section-title">📦 精选资源</p>
+
+        <!-- 详细内容卡片网格 - 由JS动态生成 -->
+        <div class="cards-grid" id="cardsGrid">
+            <!-- JS会在这里动态插入卡片 -->
+        </div>
+
+        <!-- 页脚 -->
+        <p class="footer-text">Powered By CloudFlare 💙 · 感谢访问</p>
+    </div>
+
+    <!-- ==================== 模态框 ==================== -->
+    <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+        <div class="modal-dialog" id="modalDialog" role="dialog" aria-modal="true">
+            <button class="modal-close-btn" id="modalCloseBtn" aria-label="关闭弹窗" title="关闭">
+                ✕
+            </button>
+            <div class="modal-image-wrapper">
+                <img id="modalImage" src="" alt="预览图">
+            </div>
+            <div class="modal-body">
+                <h3 class="modal-title" id="modalTitle"></h3>
+                <p class="modal-desc" id="modalDesc"></p>
+                <div class="modal-buttons">
+                    <a class="modal-download-btn btn-primary-download" id="modalDownloadBtn" href="#" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        下载
+                    </a>
+                    <a class="modal-download-btn btn-backup-download" id="modalBackupBtn" href="#" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        备用下载
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ======================================================
+            //  ▼▼▼ 在这里修改详细内容卡片的数据 ▼▼▼
+            //  每个对象代表一张卡片，根据需要增删
+            //  imageUrl:     预览图URL（卡片和弹窗共用，弹窗中显示更大尺寸）
+            //  title:        标题
+            //  description:  简介
+            //  downloadUrl:  下载按钮跳转链接
+            //  backupUrl:    备用下载按钮跳转链接
+            // ======================================================
+            const cardsData = [{
+                id: 1,
+                imageUrl: './res/pic/1.png',
+                title: '村民监狱',
+                description: '更好看的村民交易所',
+                downloadUrl: 'https://wwbnl.lanzouw.com/idJi33mdbfte',
+                backupUrl: 'https://1819573463.share.123pan.cn/123pan/HolQjv-b3m23',
+            }, {
+                id: 2,
+                imageUrl: './res/pic/2.png',
+                title: '全自动农场',
+                description: '基于黑山大叔的全自动农场了个外壳',
+                downloadUrl: 'https://wwbnl.lanzouw.com/igltv3o97e9c',
+                backupUrl: 'https://1819573463.share.123pan.cn/123pan/HolQjv-o8cn3',
+            },  ];
+            // ▲▲▲ 数据配置结束 ▲▲▲
+            // ======================================================
+
+            // 获取DOM元素
+            const cardsGrid = document.getElementById('cardsGrid');
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalDialog = document.getElementById('modalDialog');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDesc = document.getElementById('modalDesc');
+            const modalDownloadBtn = document.getElementById('modalDownloadBtn');
+            const modalBackupBtn = document.getElementById('modalBackupBtn');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+            // 存储滚动条宽度
+            let scrollbarWidth = 0;
+
+            // 计算滚动条宽度
+            function getScrollbarWidth() {
+                const outer = document.createElement('div');
+                outer.style.visibility = 'hidden';
+                outer.style.overflow = 'scroll';
+                outer.style.width = '100px';
+                outer.style.position = 'absolute';
+                outer.style.top = '-9999px';
+                document.body.appendChild(outer);
+                const inner = document.createElement('div');
+                inner.style.width = '100%';
+                outer.appendChild(inner);
+                const width = outer.offsetWidth - inner.offsetWidth;
+                document.body.removeChild(outer);
+                return width;
+            }
+
+            scrollbarWidth = getScrollbarWidth();
+            document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
+
+            // 生成卡片HTML
+            function createCardHTML(card, index) {
+                const animationDelay = (index * 0.08) + 's';
+                return `
+                    <div class="content-card"
+                         data-card-id="${card.id}"
+                         style="animation-delay: ${animationDelay};"
+                         role="button"
+                         tabindex="0"
+                         aria-label="查看详情: ${card.title.replace(/"/g, '&quot;')}">
+                        <div class="card-image-wrapper">
+                            <img src="${card.imageUrl}"
+                                 alt="${card.title}"
+                                 loading="lazy"
+                                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22375%22 fill=%22%23e0e0e8%22><rect width=%22600%22 height=%22375%22/><text x=%22300%22 y=%22195%22 text-anchor=%22middle%22 font-size=%2220%22 fill=%22%23999%22>图片加载失败</text></svg>'">
+                        </div>
+                        <div class="card-body">
+                            <h3 class="card-title">${card.title}</h3>
+                            <p class="card-desc">${card.description}</p>
+                            <span class="card-click-hint">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+                                点击查看详情
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 渲染所有卡片
+            function renderCards() {
+                if (!cardsGrid) return;
+                cardsGrid.innerHTML = cardsData.map((card, index) => createCardHTML(card, index)).join('');
+                // 绑定卡片点击事件
+                bindCardEvents();
+            }
+
+            // 绑定卡片点击事件（使用事件委托）
+            function bindCardEvents() {
+                if (!cardsGrid) return;
+                // 移除旧的事件监听器（通过克隆节点）
+                const newGrid = cardsGrid.cloneNode(true);
+                cardsGrid.parentNode.replaceChild(newGrid, cardsGrid);
+                // 更新引用
+                window._cardsGridRef = newGrid;
+
+                newGrid.addEventListener('click', function(e) {
+                    const card = e.target.closest('.content-card');
+                    if (!card) return;
+                    const cardId = parseInt(card.getAttribute('data-card-id'));
+                    const cardData = cardsData.find(c => c.id === cardId);
+                    if (cardData) {
+                        openModal(cardData);
+                    }
+                });
+
+                // 键盘可访问性
+                newGrid.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        const card = e.target.closest('.content-card');
+                        if (!card) return;
+                        e.preventDefault();
+                        const cardId = parseInt(card.getAttribute('data-card-id'));
+                        const cardData = cardsData.find(c => c.id === cardId);
+                        if (cardData) {
+                            openModal(cardData);
+                        }
+                    }
+                });
+            }
+
+            // 打开模态框
+            function openModal(cardData) {
+                if (!modalOverlay || !modalImage || !modalTitle || !modalDesc || !modalDownloadBtn || !modalBackupBtn)
+                    return;
+
+                // 填充数据
+                modalImage.src = cardData.imageUrl;
+                modalImage.alt = cardData.title;
+                modalTitle.textContent = cardData.title;
+                modalDesc.textContent = cardData.description;
+                modalDownloadBtn.href = cardData.downloadUrl;
+                modalBackupBtn.href = cardData.backupUrl;
+
+                // 图片加载错误时的fallback
+                modalImage.onerror = function() {
+                    modalImage.src =
+                        'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22375%22 fill=%22%23e8e8ee%22><rect width=%22600%22 height=%22375%22/><text x=%22300%22 y=%22195%22 text-anchor=%22middle%22 font-size=%2218%22 fill=%22%23999%22>图片加载失败</text></svg>';
+                };
+
+                // 显示模态框
+                modalOverlay.classList.add('active');
+                modalOverlay.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+
+                // 聚焦关闭按钮
+                setTimeout(() => {
+                    if (modalCloseBtn) modalCloseBtn.focus();
+                }, 100);
+
+                // 模态框滚动到顶部
+                if (modalDialog) {
+                    modalDialog.scrollTop = 0;
+                }
+            }
+
+            // 关闭模态框
+            function closeModal() {
+                if (!modalOverlay) return;
+                modalOverlay.classList.remove('active');
+                modalOverlay.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('modal-open');
+
+                // 延迟清除图片，避免关闭动画时看到图片切换
+                setTimeout(() => {
+                    if (modalImage && !modalOverlay.classList.contains('active')) {
+                        // 保持图片不变，仅在下次打开时更新
+                    }
+                }, 350);
+            }
+
+            // 绑定模态框关闭事件
+            if (modalCloseBtn) {
+                modalCloseBtn.addEventListener('click', closeModal);
+            }
+
+            // 点击遮罩层关闭
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', function(e) {
+                    if (e.target === modalOverlay) {
+                        closeModal();
+                    }
+                });
+            }
+
+            // ESC键关闭
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('active')) {
+                    closeModal();
+                }
+            });
+
+            // 阻止模态框内部点击事件冒泡到遮罩层
+            if (modalDialog) {
+                modalDialog.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            // 初始渲染
+            renderCards();
+
+            // 将渲染函数暴露到全局，方便调试
+            window.refreshCards = function(newData) {
+                if (Array.isArray(newData)) {
+                    // 更新cardsData引用
+                    cardsData.length = 0;
+                    newData.forEach(item => cardsData.push(item));
+                }
+                // 重新获取grid引用
+                const grid = window._cardsGridRef || document.getElementById('cardsGrid');
+                if (grid) {
+                    grid.innerHTML = cardsData.map((card, index) => createCardHTML(card, index)).join('');
+                    // 重新绑定事件
+                    const newGrid = grid.cloneNode(true);
+                    grid.parentNode.replaceChild(newGrid, grid);
+                    window._cardsGridRef = newGrid;
+                    newGrid.addEventListener('click', function(e) {
+                        const card = e.target.closest('.content-card');
+                        if (!card) return;
+                        const cardId = parseInt(card.getAttribute('data-card-id'));
+                        const cardData = cardsData.find(c => c.id === cardId);
+                        if (cardData) openModal(cardData);
+                    });
+                    newGrid.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            const card = e.target.closest('.content-card');
+                            if (!card) return;
+                            e.preventDefault();
+                            const cardId = parseInt(card.getAttribute('data-card-id'));
+                            const cardData = cardsData.find(c => c.id === cardId);
+                            if (cardData) openModal(cardData);
+                        }
+                    });
+                }
+            };
+
+            console.log('✅ 资源小站已就绪！');
+            console.log('   - 卡片数据可在 JS 中的 cardsData 数组里修改');
+            console.log('   - 背景图片可在 CSS 的 body 样式中替换');
+            console.log('   - 社交链接在 HTML 的 .social-links 区域修改');
+            console.log('   - 赞赏链接在 HTML 的 .donate-btn 的 href 中修改');
+            console.log('   - 使用 window.refreshCards(newDataArray) 可动态更新卡片');
+            console.log(`   - 当前共加载 ${cardsData.length} 张卡片`);
+        })();
+    </script>
+</body>
+</html>
